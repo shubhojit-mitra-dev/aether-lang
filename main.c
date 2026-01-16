@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 typedef enum {
   SEMI,
@@ -28,15 +29,27 @@ typedef struct {
   int value;
 } TokenLiteral;
 
+void lexer(FILE *file) {
+  char curr;
+  while ((curr = fgetc(file)) != EOF) {
+    if (isalpha(curr)) {
+      printf("FOUND CHARACTER: %c\n", curr);
+    } else if (isdigit(curr)) {
+      printf("FOUND DIGIT: %d\n", curr-'0');
+    } else if (curr == ';') {
+      printf("FOUND SEMICOLON\n");
+    } else if (curr == '(') {
+      printf("FOUND OPEN PAREN\n");
+    } else if (curr == ')') {
+      printf("FOUND CLOSE_PAREN\n");
+    }
+  }
+  fclose(file);
+}
+
 int main() {
   FILE *file;
   file = fopen("test.ae", "r");
-  char curr;
-
-  while ((curr = fgetc(file)) != EOF) {
-    printf("%c", curr);
-  }
-
-  fclose(file);
+  lexer(file);
   return 0;
 }
