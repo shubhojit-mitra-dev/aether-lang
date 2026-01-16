@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <string.h>
 
 typedef enum {
   SEMI,
@@ -29,6 +30,20 @@ typedef struct {
   int value;
 } TokenLiteral;
 
+TokenKeyword* generate_keyword(char curr, FILE *file) {
+  TokenKeyword *token = malloc(sizeof(TokenKeyword));
+  char *keyword = malloc(sizeof(char)*4);
+  int keyword_idx = 0;
+  while (isalpha(curr) && curr != EOF) {
+    keyword[keyword_idx++] = curr;
+    curr = fgetc(file);
+  }
+  if (strcmp(keyword, "exit") == 0) {
+    token->type = EXIT;
+  }
+  return (token);
+}
+
 TokenLiteral* generate_number(char curr, FILE *file) {
   TokenLiteral *token = malloc(sizeof(TokenLiteral));
   token->type = INT;
@@ -47,7 +62,11 @@ void lexer(FILE *file) {
   char curr;
   while ((curr = fgetc(file)) != EOF) {
     if (isalpha(curr)) {
-      printf("FOUND CHARACTER: %c\n", curr);
+      TokenKeyword *token = generate_keyword(curr, file);
+      if (token->type == EXIT) {
+        printf("EXIT\n");
+      }
+      // printf("FOUND KEYWORD: %u\n", token->type);
     } else if (isdigit(curr)) {
       TokenLiteral *token = generate_number(curr, file);
       printf("FOUND TOKEN VALUE: %d\n", token->value);
