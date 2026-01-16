@@ -38,6 +38,8 @@ TokenKeyword* generate_keyword(char curr, FILE *file) {
     keyword[keyword_idx++] = curr;
     curr = fgetc(file);
   }
+
+  if (curr != EOF) ungetc(curr, file);
   if (strcmp(keyword, "exit") == 0) {
     token->type = EXIT;
   }
@@ -53,7 +55,8 @@ TokenLiteral* generate_number(char curr, FILE *file) {
     value[value_idx++] = curr;
     curr = fgetc(file);
   }
-  
+
+  if (curr != EOF) ungetc(curr, file);
   token->value = atoi(value);
   return (token);
 }
@@ -66,7 +69,6 @@ void lexer(FILE *file) {
       if (token->type == EXIT) {
         printf("EXIT\n");
       }
-      // printf("FOUND KEYWORD: %u\n", token->type);
     } else if (isdigit(curr)) {
       TokenLiteral *token = generate_number(curr, file);
       printf("FOUND TOKEN VALUE: %d\n", token->value);
