@@ -26,7 +26,7 @@ typedef struct {
 
 typedef struct {
   TypeLiteral type;
-  char* value;
+  int value;
 } TokenLiteral;
 
 TokenLiteral* generate_number(char curr, FILE *file) {
@@ -38,7 +38,8 @@ TokenLiteral* generate_number(char curr, FILE *file) {
     value[value_idx++] = curr;
     curr = fgetc(file);
   }
-  token->value = value;
+  
+  token->value = atoi(value);
   return (token);
 }
 
@@ -49,7 +50,7 @@ void lexer(FILE *file) {
       printf("FOUND CHARACTER: %c\n", curr);
     } else if (isdigit(curr)) {
       TokenLiteral *token = generate_number(curr, file);
-      printf("FOUND TOKEN VALUE: %s\n", token->value);
+      printf("FOUND TOKEN VALUE: %d\n", token->value);
     } else if (curr == ';') {
       printf("FOUND SEMICOLON\n");
     } else if (curr == '(') {
