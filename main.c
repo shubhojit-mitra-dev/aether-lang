@@ -4,34 +4,18 @@
 #include <string.h>
 
 typedef enum {
-  SEMI,
-  OPEN_PAREN,
-  CLOSE_PAREN,
-} TypeSeparator;
-
-typedef enum {
-  EXIT,
-} TypeKeyword;
-
-typedef enum {
   INT,
-} TypeLiteral;
+  KEYWORD,
+  SEPARATOR,
+} TokenType;
 
 typedef struct {
-  TypeKeyword type;
-} TokenKeyword;
+  TokenType type;
+  char* value;
+} Token;
 
-typedef struct {
-  TypeSeparator type;
-} TokenSeparator;
-
-typedef struct {
-  TypeLiteral type;
-  int value;
-} TokenLiteral;
-
-TokenKeyword* generate_keyword(char curr, FILE *file) {
-  TokenKeyword *token = malloc(sizeof(TokenKeyword));
+Token* generate_keyword(char curr, FILE *file) {
+  Token *token = malloc(sizeof(Token));
   char *keyword = malloc(sizeof(char)*4);
   int keyword_idx = 0;
   while (isalpha(curr) && curr != EOF) {
@@ -41,13 +25,14 @@ TokenKeyword* generate_keyword(char curr, FILE *file) {
 
   if (curr != EOF) ungetc(curr, file);
   if (strcmp(keyword, "exit") == 0) {
-    token->type = EXIT;
+    token->type = KEYWORD;
+    token->value = "EXIT";
   }
   return (token);
 }
 
-TokenLiteral* generate_number(char curr, FILE *file) {
-  TokenLiteral *token = malloc(sizeof(TokenLiteral));
+Token* generate_number(char curr, FILE *file) {
+  Token *token = malloc(sizeof(Token));
   token->type = INT;
   char *value = malloc(sizeof(char)*8);
   int value_idx = 0;
@@ -57,7 +42,7 @@ TokenLiteral* generate_number(char curr, FILE *file) {
   }
 
   if (curr != EOF) ungetc(curr, file);
-  token->value = atoi(value);
+  token->value = value;
   return (token);
 }
 
@@ -65,13 +50,11 @@ void lexer(FILE *file) {
   char curr;
   while ((curr = fgetc(file)) != EOF) {
     if (isalpha(curr)) {
-      TokenKeyword *token = generate_keyword(curr, file);
-      if (token->type == EXIT) {
-        printf("EXIT\n");
-      }
+      Token *token = generate_keyword(curr, file);
+     printf("FOUND KEYWORD: %s\n", token->value); 
     } else if (isdigit(curr)) {
-      TokenLiteral *token = generate_number(curr, file);
-      printf("FOUND TOKEN VALUE: %d\n", token->value);
+      Token *token = generate_number(curr, file);
+      printf("FOUND TOKEN VALUE: %s\n", token->value);
     } else if (curr == ';') {
       printf("FOUND SEMICOLON\n");
     } else if (curr == '(') {
