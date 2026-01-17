@@ -7,6 +7,7 @@ typedef enum {
   INT,
   KEYWORD,
   SEPARATOR,
+  NULL_TOKEN,
 } TokenType;
 
 typedef struct {
@@ -68,15 +69,17 @@ void print_separator(Token* separator_token, char curr) {
   print_token(separator_token);
 }
 
-void lexer(FILE *file) {
+Token* lexer(FILE *file) {
+  Token* tokens = malloc(sizeof(Token)*1024);
+  size_t token_idx = 0;
   char curr;
   while ((curr = fgetc(file)) != EOF) {
     if (isalpha(curr)) {
       Token *token = generate_keyword(curr, file);
-      print_token(token);
+      tokens[token_idx++] = *token;
     } else if (isdigit(curr)) {
       Token *token = generate_number(curr, file);
-      print_token(token); 
+      tokens[token_idx++] = *token;
     } else if (curr == ';') {
       Token *semicolon_token = malloc(sizeof(Token));
       print_separator(semicolon_token, curr);
@@ -88,12 +91,17 @@ void lexer(FILE *file) {
       print_separator(close_paren_token, curr);
     }
   }
+  tokens[token_idx].type = NULL_TOKEN;
   fclose(file);
+  return tokens;
 }
 
 int main() {
   FILE *file;
   file = fopen("test.ae", "r");
-  lexer(file);
+  Token* tokens = lexer(file);
+  for (size_t i = 0; tokens[i].type != NULL_TOKEN; i++) {
+    print_token(&tokens[i]);
+  }
   return 0;
 }
