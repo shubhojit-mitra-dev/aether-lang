@@ -36,7 +36,8 @@ Token* generate_keyword(char curr, FILE *file) {
     keyword[keyword_idx++] = curr;
     curr = fgetc(file);
   }
-
+  
+  keyword[keyword_idx] = '\0';
   if (curr != EOF) ungetc(curr, file);
   if (strcmp(keyword, "exit") == 0) {
     token->type = KEYWORD;
@@ -54,19 +55,21 @@ Token* generate_number(char curr, FILE *file) {
     value[value_idx++] = curr;
     curr = fgetc(file);
   }
-
+  
+  value[value_idx] = '\0';
   if (curr != EOF) ungetc(curr, file);
   token->value = value;
   return (token);
 }
 
-void print_separator(Token* separator_token, char curr) {
-  separator_token->type = SEPARATOR;
+Token* generate_separator(char curr) {
+  Token* token = malloc(sizeof(Token));
+  token->type = SEPARATOR;
   char* value = malloc(2);
   value[0] = curr;
   value[1] = '\0';
-  separator_token->value = value;
-  print_token(separator_token);
+  token->value = value;
+  return (token);
 }
 
 Token* lexer(FILE *file) {
@@ -75,20 +78,11 @@ Token* lexer(FILE *file) {
   char curr;
   while ((curr = fgetc(file)) != EOF) {
     if (isalpha(curr)) {
-      Token *token = generate_keyword(curr, file);
-      tokens[token_idx++] = *token;
+      tokens[token_idx++] = *generate_keyword(curr, file);
     } else if (isdigit(curr)) {
-      Token *token = generate_number(curr, file);
-      tokens[token_idx++] = *token;
-    } else if (curr == ';') {
-      Token *semicolon_token = malloc(sizeof(Token));
-      print_separator(semicolon_token, curr);
-    } else if (curr == '(') {
-      Token *open_paren_token = malloc(sizeof(Token));
-      print_separator(open_paren_token, curr);
-    } else if (curr == ')') {
-      Token *close_paren_token = malloc(sizeof(Token));
-      print_separator(close_paren_token, curr);
+      tokens[token_idx++] = *generate_number(curr, file);
+    } else if (curr == ';' || curr == '(' || curr == ')') {
+      tokens[token_idx++] = *generate_separator(curr);
     }
   }
   tokens[token_idx].type = NULL_TOKEN;
