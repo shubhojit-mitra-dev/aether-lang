@@ -14,6 +14,19 @@ typedef struct {
   char* value;
 } Token;
 
+void print_token(Token* token) {
+  printf("TOKEN VALUE: %s\n", token->value);
+  if (token->type == INT) {
+    printf("TOKEN TYPE: INT\n");
+  }
+  if (token->type == KEYWORD) {
+    printf("TOKEN TYPE: KEYWORD\n");
+  }
+  if (token->type == SEPARATOR) {
+    printf("TOKEN TYPE: SEPARATOR\n");
+  }
+}
+
 Token* generate_keyword(char curr, FILE *file) {
   Token *token = malloc(sizeof(Token));
   char *keyword = malloc(sizeof(char)*4);
@@ -46,21 +59,33 @@ Token* generate_number(char curr, FILE *file) {
   return (token);
 }
 
+void print_separator(Token* separator_token, char curr) {
+  separator_token->type = SEPARATOR;
+  char* value = malloc(2);
+  value[0] = curr;
+  value[1] = '\0';
+  separator_token->value = value;
+  print_token(separator_token);
+}
+
 void lexer(FILE *file) {
   char curr;
   while ((curr = fgetc(file)) != EOF) {
     if (isalpha(curr)) {
       Token *token = generate_keyword(curr, file);
-     printf("FOUND KEYWORD: %s\n", token->value); 
+      print_token(token);
     } else if (isdigit(curr)) {
       Token *token = generate_number(curr, file);
-      printf("FOUND TOKEN VALUE: %s\n", token->value);
+      print_token(token); 
     } else if (curr == ';') {
-      printf("FOUND SEMICOLON\n");
+      Token *semicolon_token = malloc(sizeof(Token));
+      print_separator(semicolon_token, curr);
     } else if (curr == '(') {
-      printf("FOUND OPEN PAREN\n");
+      Token *open_paren_token = malloc(sizeof(Token));
+      print_separator(open_paren_token, curr);
     } else if (curr == ')') {
-      printf("FOUND CLOSE_PAREN\n");
+      Token *close_paren_token = malloc(sizeof(Token));
+      print_separator(close_paren_token, curr);
     }
   }
   fclose(file);
