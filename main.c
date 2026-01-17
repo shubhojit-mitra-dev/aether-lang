@@ -4,34 +4,32 @@
 #include <string.h>
 
 typedef enum {
-  SEMI,
-  OPEN_PAREN,
-  CLOSE_PAREN,
-} TypeSeparator;
-
-typedef enum {
-  EXIT,
-} TypeKeyword;
-
-typedef enum {
   INT,
-} TypeLiteral;
+  KEYWORD,
+  SEPARATOR,
+  NULL_TOKEN,
+} TokenType;
 
 typedef struct {
-  TypeKeyword type;
-} TokenKeyword;
+  TokenType type;
+  char* value;
+} Token;
 
-typedef struct {
-  TypeSeparator type;
-} TokenSeparator;
+void print_token(Token* token) {
+  printf("TOKEN VALUE: %s\n", token->value);
+  if (token->type == INT) {
+    printf("TOKEN TYPE: INT\n");
+  }
+  if (token->type == KEYWORD) {
+    printf("TOKEN TYPE: KEYWORD\n");
+  }
+  if (token->type == SEPARATOR) {
+    printf("TOKEN TYPE: SEPARATOR\n");
+  }
+}
 
-typedef struct {
-  TypeLiteral type;
-  int value;
-} TokenLiteral;
-
-TokenKeyword* generate_keyword(char curr, FILE *file) {
-  TokenKeyword *token = malloc(sizeof(TokenKeyword));
+Token* generate_keyword(char curr, FILE *file) {
+  Token *token = malloc(sizeof(Token));
   char *keyword = malloc(sizeof(char)*4);
   int keyword_idx = 0;
   while (isalpha(curr) && curr != EOF) {
@@ -41,13 +39,14 @@ TokenKeyword* generate_keyword(char curr, FILE *file) {
 
   if (curr != EOF) ungetc(curr, file);
   if (strcmp(keyword, "exit") == 0) {
-    token->type = EXIT;
+    token->type = KEYWORD;
+    token->value = "EXIT";
   }
   return (token);
 }
 
-TokenLiteral* generate_number(char curr, FILE *file) {
-  TokenLiteral *token = malloc(sizeof(TokenLiteral));
+Token* generate_number(char curr, FILE *file) {
+  Token *token = malloc(sizeof(Token));
   token->type = INT;
   char *value = malloc(sizeof(char)*8);
   int value_idx = 0;
@@ -57,35 +56,52 @@ TokenLiteral* generate_number(char curr, FILE *file) {
   }
 
   if (curr != EOF) ungetc(curr, file);
-  token->value = atoi(value);
+  token->value = value;
   return (token);
 }
 
-void lexer(FILE *file) {
+void print_separator(Token* separator_token, char curr) {
+  separator_token->type = SEPARATOR;
+  char* value = malloc(2);
+  value[0] = curr;
+  value[1] = '\0';
+  separator_token->value = value;
+  print_token(separator_token);
+}
+
+Token* lexer(FILE *file) {
+  Token* tokens = malloc(sizeof(Token)*1024);
+  size_t token_idx = 0;
   char curr;
   while ((curr = fgetc(file)) != EOF) {
     if (isalpha(curr)) {
-      TokenKeyword *token = generate_keyword(curr, file);
-      if (token->type == EXIT) {
-        printf("EXIT\n");
-      }
+      Token *token = generate_keyword(curr, file);
+      tokens[token_idx++] = *token;
     } else if (isdigit(curr)) {
-      TokenLiteral *token = generate_number(curr, file);
-      printf("FOUND TOKEN VALUE: %d\n", token->value);
+      Token *token = generate_number(curr, file);
+      tokens[token_idx++] = *token;
     } else if (curr == ';') {
-      printf("FOUND SEMICOLON\n");
+      Token *semicolon_token = malloc(sizeof(Token));
+      print_separator(semicolon_token, curr);
     } else if (curr == '(') {
-      printf("FOUND OPEN PAREN\n");
+      Token *open_paren_token = malloc(sizeof(Token));
+      print_separator(open_paren_token, curr);
     } else if (curr == ')') {
-      printf("FOUND CLOSE_PAREN\n");
+      Token *close_paren_token = malloc(sizeof(Token));
+      print_separator(close_paren_token, curr);
     }
   }
+  tokens[token_idx].type = NULL_TOKEN;
   fclose(file);
+  return tokens;
 }
 
 int main() {
   FILE *file;
   file = fopen("test.ae", "r");
-  lexer(file);
+  Token* tokens = lexer(file);
+  for (size_t i = 0; tokens[i].type != NULL_TOKEN; i++) {
+    print_token(&tokens[i]);
+  }
   return 0;
 }
